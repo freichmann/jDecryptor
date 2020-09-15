@@ -1,0 +1,6 @@
+http://www.anc.org/
+http://www.natcorp.ox.ac.uk/
+http://www.americancorpus.org/
+http://oxforddictionaries.com/page/oec
+
+cat OANC.txt | tr -cd '[[:alpha:]]' | tr A-Z a-z
