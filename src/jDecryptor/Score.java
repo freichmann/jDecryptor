@@ -27,17 +27,17 @@ public class Score implements Comparable<Score> {
 
 		for (LanguageStatistics aNorm : iNorms) {
 			// log(Poisson) score is actually not really normal distributed
-//			org.apache.commons.math3.distribution.NormalDistribution aNormalDist = new org.apache.commons.math3.distribution.NormalDistribution(aNorm.getScoreMean(iClear.length()),aNorm.getScoreSigma(iClear.length()));
+			org.apache.commons.math3.distribution.NormalDistribution aNormalDist = new org.apache.commons.math3.distribution.NormalDistribution(aNorm.getScoreMean(iClear.length()),aNorm.getScoreSigma(iClear.length()));
 			Double aLengthScore = aNorm.rate(iClear);
 
-//			Double aLnScore=aNormalDist.logDensity(aLengthScore);
-			aScore += aLengthScore;
+			Double aLnScore=aNormalDist.logDensity(aLengthScore);
+			aScore += aLnScore;
 			
 			if (GlobalStore.getInstance().getVerbose()) {
 				DecimalFormat aFormat = new DecimalFormat("0.00E0");
 				if (_log.length()>0)
 					_log.append(" ");
-				_log.append(aNorm.getLength() + ":" + aFormat.format(aLengthScore));
+				_log.append(aNorm.getLength() + ":" + aFormat.format(aLnScore));
 			}
 		}
 		_patternScore=aScore;

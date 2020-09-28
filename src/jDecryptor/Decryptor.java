@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 1.4.2020 15:49");
+			System.out.println("Version 28.9.2020 21:16");
 
 			Options aOptions = new Options();
 			{
@@ -152,7 +152,6 @@ public class Decryptor {
 
 			System.out.println("Parallel threads: " + aMaxThreads);
 			System.out.println("Iterations before new attempt: " + (aMaximumLoops == 0 ? "unlimited" : aMaximumLoops));
-			//		System.out.println("Maximum n-gram length: " + aMaxLetterSequenceLength);
 			System.out.println("Filter for language alphabet: " + aExcludeFilter);
 
 			final Set<LanguageStatistics> aLetters = new HashSet<LanguageStatistics>();
@@ -206,7 +205,7 @@ public class Decryptor {
 			{
 				final StringBuffer aHugeText = new StringBuffer();
 				for (String aHuge:aHuges) {
-					System.out.println("Reading huge file " + Paths.get(aHuge));
+					System.out.println("Reading sample file " + Paths.get(aHuge));
 					BufferedInputStream aIn = new BufferedInputStream(Files.newInputStream(Paths.get(aHuge)));
 					Scanner aScanner = new Scanner(aIn);
 
@@ -247,8 +246,8 @@ public class Decryptor {
 
 					Cryptor aEncryptor = new Cryptor(Init.COPIED, aSymbols, aAlphabet);
 					//			String aStripped = aMsg.toLowerCase().replaceAll( aInnerFilter, "" );
-					//			Integer aLength = aMsg.length();
-					Integer aLength = 340;
+					Integer aLength = aMsg.length();
+//					Integer aLength = 340;
 					System.out.println("Solution: " + aEncryptor);
 					String aMapped = aMsg.toLowerCase().replaceAll(aExcludeFilter, "");
 					String aTruncated = aMapped.substring(0, Math.min(aLength, aMapped.length()));
@@ -276,17 +275,14 @@ public class Decryptor {
 					Double aLnPerfectSum=0.0;
 					org.apache.commons.math3.analysis.function.Log aLn = new org.apache.commons.math3.analysis.function.Log();
 					for (Future<LanguageStatistics> aLangStatFuture:aLangStatFutures) {
-//						Double aLnPerfect=-1.0/Math.PI-(aLn.value(2.0*Math.PI))/2.0-aLn.value(aLangStatFuture.get().getScoreSigma(aCipher.length()));
-						Double aLnPerfect=aLangStatFuture.get().getScoreMean(aCipher.length());
 						System.out.println("Score statistics result for " + aLangStatFuture.get().getLength()
 								+ " Mean: " + aFormat.format(aLangStatFuture.get().getScoreMean(aCipher.length()))
-								+ " Sigma:" + aFormat.format(aLangStatFuture.get().getScoreSigma(aCipher.length()))
-								+ " Expected Score Contribution: " + aFormat.format(aLnPerfect));
-						aLnPerfectSum+=aLnPerfect;
+								+ " Sigma:" + aFormat.format(aLangStatFuture.get().getScoreSigma(aCipher.length())));
+						aLnPerfectSum-=aLn.value(Math.sqrt(2*Math.PI)*aLangStatFuture.get().getScoreSigma(aCipher.length()));
 					}
-					System.out.println("Expected score of solution: " + aFormat.format( aLnPerfectSum ));
+					System.out.println("Maximum reachable score: " + aFormat.format( aLnPerfectSum ));
 				} else {
-					System.err.println("No huge text to build statistics from. Stopping.");
+					System.err.println("No text sample to build statistics from. Stopping.");
 					System.exit(1);
 				}
 			}
