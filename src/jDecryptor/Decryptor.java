@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 28.9.2020 21:16");
+			System.out.println("Version 29.9.2020 15:16");
 
 			Options aOptions = new Options();
 			{
@@ -64,25 +64,13 @@ public class Decryptor {
 			}
 
 			{
-				Option aOpt = new Option("h", "huge", true, "huge text sample");
-				aOpt.setRequired(true);
-				aOptions.addOption(aOpt);
-			}
-
-			{
-				Option aOpt = new Option("i", "iterations", true, "iterations before re-trying");
+				Option aOpt = new Option("i", "iterations", true, "maximum resets per thread");
 				aOpt.setRequired(false);
 				aOptions.addOption(aOpt);
 			}
 
 			{
-				Option aOpt = new Option("j", "seed", true, "key to start with");
-				aOpt.setRequired(false);
-				aOptions.addOption(aOpt);
-			}
-
-			{
-				Option aOpt = new Option("l", "language", true, "language sample files");
+				Option aOpt = new Option("l", "language", true, "language n-gram files");
 				aOpt.setRequired(true);
 				aOptions.addOption(aOpt);
 			}
@@ -94,24 +82,29 @@ public class Decryptor {
 			}
 
 			{
-				Option aOpt = new Option("s", "scramble", true,
-						"fraction to scramble when starting new iteration. n means 1/n-th");
+				Option aOpt = new Option("r", "scramble", true, "how often and much to randomize when starting a new iteration");
 				aOpt.setRequired(false);
 				aOptions.addOption(aOpt);
 			}
 
 			{
-				Option aOpt = new Option("t", "threads", true, "number of threads");
+				Option aOpt = new Option("s", "seed", true, "key to start with");
+				aOpt.setRequired(false);
+				aOptions.addOption(aOpt);
+			}
+			
+			{
+				Option aOpt = new Option("t", "threads", true, "number of parallel threads");
 				aOpt.setRequired(false);
 				aOptions.addOption(aOpt);
 			}
 
 			{
-				Option aOpt = new Option("x", "exclude", true, "exclude filter when reading language corpus");
-				aOpt.setRequired(false);
+				Option aOpt = new Option("w", "huge", true, "text sample to build score statistics from");
+				aOpt.setRequired(true);
 				aOptions.addOption(aOpt);
 			}
-
+			
 			CommandLineParser aCommandParser = new DefaultParser();
 			HelpFormatter aFormatter = new HelpFormatter();
 			CommandLine aCommandLine;
@@ -142,17 +135,15 @@ public class Decryptor {
 			String aLangs[] = aCommandLine.getOptionValues("language");
 			String aHuges[] = aCommandLine.getOptionValues("huge");
 			final Integer aMaximumLoops = Integer.valueOf(aCommandLine.getOptionValue("iterations", "0"));
-			final String aExcludeFilter = aCommandLine.getOptionValue("exclude", "[^a-z]+");
 			final ReadMode aReadMode = ReadMode.valueOf(aCommandLine.getOptionValue("mode"));
-			final Integer aRandomFraction = Integer.valueOf(aCommandLine.getOptionValue("scramble", "4"));
+			final Double aRandomFraction = Double.valueOf(aCommandLine.getOptionValue("scramble", "0.25"));
 			final String aSeed = aCommandLine.getOptionValue("seed", null);
 			final boolean aVerbose = aCommandLine.hasOption("verbose");
 			final Set<String> aAlphabet = new TreeSet<String>();
 			GlobalStore.getInstance().setVerbose(aVerbose);
 
 			System.out.println("Parallel threads: " + aMaxThreads);
-			System.out.println("Iterations before new attempt: " + (aMaximumLoops == 0 ? "unlimited" : aMaximumLoops));
-			System.out.println("Filter for language alphabet: " + aExcludeFilter);
+			System.out.println("Maximum iterations per thread: " + (aMaximumLoops == 0 ? "unlimited" : aMaximumLoops));
 
 			final Set<LanguageStatistics> aLetters = new HashSet<LanguageStatistics>();
 
@@ -210,7 +201,7 @@ public class Decryptor {
 					Scanner aScanner = new Scanner(aIn);
 
 					while (aScanner.hasNextLine())
-						aHugeText.append(aScanner.nextLine().replaceAll(aExcludeFilter, ""));
+						aHugeText.append(aScanner.nextLine());
 					aScanner.close();
 					aIn.close();			
 				}
@@ -221,35 +212,14 @@ public class Decryptor {
 				if (aDebugFlag) {
 					System.out.println("Debug mode output start");
 					Set<Character> aSymbols = new HashSet<Character>();
-					//			String aSymbolString="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-!$%&/()[].,:;_*~<>|=?#^°";
 					String aSymbolString = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+";
-					//			String aSymbolString = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 					for (int aPos = 0; aPos < aSymbolString.length(); aPos++)
 						aSymbols.add(aSymbolString.charAt(aPos));
-					//			 String aMsg =
-					//			 "IhaveadreamthatonedaythisnationwillriseupandliveoutthetruemeaningofitscreedWeholdthesetruthstobeselfevidentthatallmenarecreatedequal"
-					//			 +"IhaveadreamthatonedayontheredhillsofGeorgiathesonsofformerslavesandthesonsofformerslaveownerswillbeabletositdowntogetheratatableofbrotherhood"
-					//			 +"IhaveadreamthatonedayeventhestateofMississippiastateswelteringwiththeheatofinjusticeandswelteringwiththeheatofoppressionwillbetransformedintoanoasisoffreedomandjustice"
-					//			 +"IhaveadreamthatmyfourlittlechildrenwillonedayliveinanationwheretheywillnotbejudgedbythecoloroftheirskinbutbythecontentoftheircharacterIhaveadreamtoday";
 					String aMsg = "ilikekillingpeoplebecauseitissomuchfunitismorefunthankillingwildgameintheforestbecausemanisthemostdangerousanimalofalltokillsomethinggivesmethemostthrillingexperienceitisevenbetterthangettingyourrocksoffwithagirlthebestpartofitisthatwhenidieiwillbereborninparadiceandalltheihavekilledwillbecomemyslavesiwillnotgiveyoumynamebecauseyouwilltrytoslowdownorstopmycollectingofslavesformyafterlifeebeorietemethhpiti";
-					//			String aMsg="towhispersomethingtomeandicouldntmakeoutwhatitwasandsoitmadethecoldshiversrunovermethenawayoutinthewoodsiheard";
-					//			String aMsg = "In the same hour came forth the fingers of a man's hand, and wrote over against the lampstand on the plaster of the wall of the king's palace: and the king saw the part of the hand that wrote. Then the king's face was changed in him, and his thoughts troubled him; and the joints of his thighs were loosened, and his knees struck one against another. The king cried aloud to bring in the enchanters, the Chaldeans, and the soothsayers. The king spoke and said to the wise men of Babylon, Whoever shall read this writing, and show me its interpretation, shall be clothed with purple, and have a chain of gold about his neck, and shall be the third ruler in the kingdom. Then came in all the king's wise men; but they could not read the writing, nor make known to the king the interpretation. Then was king Belshazzar greatly troubled, and his face was changed in him, and his lords were perplexed. Now the queen by reason of the words of the king and his lords came into the banquet house: the queen spoke and said, O king, live forever; don't let your thoughts trouble you, nor let your face be changed. There is a man in your kingdom, in whom is the spirit of the holy gods; and in the days of your father light and understanding and wisdom, like the wisdom of the gods, were found in him; and the king Nebuchadnezzar your father, the king, I say, your father, made him master of the magicians, enchanters, Chaldeans, and soothsayers; because an excellent spirit, and knowledge, and understanding, interpreting of dreams, and showing of dark sentences, and dissolving of doubts, were found in the same Daniel, whom the king named Belteshazzar. Now let Daniel be called, and he will show the interpretation.";
-					//						String aMsg = "abc";
-					// aMsg += aMsg;
-
-					//			StringBuffer aStrBuff=new StringBuffer();
-					//			final Integer aLength=1000;
-					//			for (String aChar:aLetters.get(1).getSequences())
-					//				for (Integer aInt=0; aInt<new Double(aLetters.get(1).mean(aChar)*aLength+0.5).intValue();aInt++)
-					//					aStrBuff.append(aChar);
-					//			String aMsg=aStrBuff.toString();
-
 					Cryptor aEncryptor = new Cryptor(Init.COPIED, aSymbols, aAlphabet);
-					//			String aStripped = aMsg.toLowerCase().replaceAll( aInnerFilter, "" );
 					Integer aLength = aMsg.length();
-//					Integer aLength = 340;
 					System.out.println("Solution: " + aEncryptor);
-					String aMapped = aMsg.toLowerCase().replaceAll(aExcludeFilter, "");
+					String aMapped = aMsg.toLowerCase();
 					String aTruncated = aMapped.substring(0, Math.min(aLength, aMapped.length()));
 					String aEncrypted = aEncryptor.encrypt(aTruncated);
 					aCipher = new Cipher(aEncrypted);
@@ -257,6 +227,7 @@ public class Decryptor {
 					aDecrypted = aEncryptor.decipher(aCipher);
 				} else {
 					System.out.println("Cipher from file : " + aCipherString);
+					System.out.println("Cipher length : " + aCipherString.length());
 					aCipher = new Cipher(aCipherString);
 				}
 
@@ -324,7 +295,7 @@ public class Decryptor {
 
 			for (Integer aInt = 0; aInt < aMaxThreads; aInt++) {
 				Future<LoopCounter> aFuture = aExecService.submit(
-						new Hillclimber("Climber " + aInt, aCipher, aMaximumLoops, aLetters, aAlphabet, aRandomFraction));
+						new Hillclimber("Thread " + aInt, aCipher, aMaximumLoops, aLetters, aAlphabet, aRandomFraction));
 				aLoopCountFutures.add(aFuture);
 			}
 

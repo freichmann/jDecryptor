@@ -6,20 +6,16 @@
 
 package jDecryptor;
 
-import java.util.HashSet;
-import java.util.concurrent.Semaphore;
 import java.util.Random;
-import java.util.Set;
+import java.util.concurrent.Semaphore;
 
 public class GlobalStore {
 	private static GlobalStore _instance = null;
-	private static final Set<Long> _covered = new HashSet<Long>();
 	public static final Random _random = new Random();
 	private Cryptor _bestCryptor = null;
 	private Score _bestScore = null;
 	private boolean _verbose;
 	private static final Semaphore _scoreMutex = new Semaphore(1);
-	private static final Semaphore _coveredMutex = new Semaphore(1);
 
 	public static GlobalStore getInstance() {
 		if (_instance == null)
@@ -43,33 +39,6 @@ public class GlobalStore {
 		}
 		finally {
 			_scoreMutex.release();
-		}
-		return false;
-	}
-
-	public void addCovered(Long iHash) {
-		try {
-			_coveredMutex.acquire();
-			_covered.add(iHash);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		finally {
-			_coveredMutex.release();
-		}
-	}
-
-	public boolean isCovered(Long iHash) {
-		try {
-			_coveredMutex.acquire();
-			return _covered.contains(iHash);
-		}
-		catch (Exception e) {
-			e.printStackTrace();
-		}
-		finally {
-			_coveredMutex.release();
 		}
 		return false;
 	}

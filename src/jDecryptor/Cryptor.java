@@ -92,11 +92,11 @@ public class Cryptor {
 		return this._letters.equals(iThat._letters) && this._symbols.equals(iThat._symbols);
 	}
 
-	public void randomize(final Integer iFraction) {
+	public void randomize(final Double iFraction) {
 		Vector<Character> aSymbolVector = new Vector<Character>();
 		aSymbolVector.addAll(_symbols.keySet());
 
-		for (int aInt = 0; aInt < aSymbolVector.size() / iFraction; aInt++) {
+		for (int aInt = 0; aInt < aSymbolVector.size()*iFraction; aInt++) {
 			Character aSymbol = aSymbolVector
 					.elementAt(GlobalStore._random.nextInt(aSymbolVector.size()));
 			Integer aTo = GlobalStore._random.nextInt(_letters.size());
