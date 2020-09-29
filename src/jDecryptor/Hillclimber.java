@@ -36,7 +36,7 @@ public class Hillclimber implements Callable<LoopCounter> {
 
 	@Override
 	public LoopCounter call() throws Exception {
-		while (true) {
+		while (_maximumLoops==0 || _maximumLoops>_loops._resets) {
 			_loops._resets++;
 			_loops._optimizeLoops=0;
 			Cryptor aSeed = initialize(_randomizeFraction, _cipher);
@@ -44,15 +44,13 @@ public class Hillclimber implements Callable<LoopCounter> {
 				System.out.println((new Date()).toString() + " Resetting " + _name + " with " + aSeed);
 			optimize(aSeed, _cipher);
 		}
+		return _loops;
 	}
 
 	private void optimize(final Cryptor iCryptor, final Cipher iCipher) throws Exception {
 		Cryptor aCurrentCryptor = new Cryptor(iCryptor);
-		Move aBestMove=null;
 		Score aBestScore=null;
-
-		int aRealImprovement;
-		aRealImprovement=this._maximumLoops;
+		Move aBestMove=null;
 
 		do {
 			aBestScore=null;
@@ -61,7 +59,7 @@ public class Hillclimber implements Callable<LoopCounter> {
 				for (Integer aTo = 0; aTo < aCurrentCryptor.getAlphabetSize(); aTo++) {
 					Move aCurrentMove=new SymbolMove(aCurrentCryptor, aSymbol, aTo);
 					Score aScore=aCurrentMove.checkMove(_cipher, _letterSequences);
-					if (aScore!=null && (aBestScore==null || aScore.compareTo(aBestScore)>0)) {
+					if (aScore!=null && aBestScore!=null && aScore.compareTo(aBestScore)>0) {
 						aBestScore=aScore;
 						aBestMove=aCurrentMove;
 					}
@@ -71,7 +69,7 @@ public class Hillclimber implements Callable<LoopCounter> {
 				for (Integer aTo=aFrom+1; aTo < aCurrentCryptor.getAlphabetSize(); aTo++) {
 					Move aCurrentMove=new CharMove(aCurrentCryptor, aFrom, aTo);
 					Score aScore=aCurrentMove.checkMove(_cipher, _letterSequences);
-					if (aScore!=null && (aBestScore==null || aScore.compareTo(aBestScore)>0)) {
+					if (aScore!=null && aBestScore!=null && aScore.compareTo(aBestScore)>0) {
 						aBestScore=aScore;
 						aBestMove=aCurrentMove;
 					}
@@ -79,15 +77,12 @@ public class Hillclimber implements Callable<LoopCounter> {
 
 			if (aBestScore!=null) {
 				aBestMove.apply();
-				if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aBestScore, _name, _loops)) {
+				if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aBestScore, _name, _loops))
 					System.out.println(printBest(aCurrentCryptor, aBestScore) + " " + aCurrentCryptor.decipher(iCipher));
-					aRealImprovement=this._maximumLoops;
-				}
 			}
 
 			_loops._optimizeLoops++;
-			aRealImprovement--;
-		} while ( aBestMove!=null && (aRealImprovement>0 || this._maximumLoops==0 ));
+		} while ( aBestScore!=null );
 	}
 
 	private String printBest(final Cryptor iCryptor, final Score iScore) {
