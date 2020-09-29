@@ -1,7 +1,7 @@
 /**
  * Licensed under GPLv3
  * 
- * Fritz Reichmann, 2016-2018
+ * Fritz Reichmann, 2016-2020
  */
 
 package jDecryptor;
@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 29.9.2020 15:16");
+			System.out.println("Version 29.9.2020 15:53");
 
 			Options aOptions = new Options();
 			{

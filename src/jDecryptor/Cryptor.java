@@ -1,7 +1,7 @@
 /**
  * Licensed under GPLv3
  * 
- * Fritz Reichmann, 2016-2018
+ * Fritz Reichmann, 2016-2020
  */
 
 package jDecryptor;
