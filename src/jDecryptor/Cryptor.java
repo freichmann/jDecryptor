@@ -30,8 +30,6 @@ public class Cryptor {
 	}
 
 	public Cryptor(final String iString) throws Exception {
-		// NOROTATE,NOSWAP,COPIED,"[a-z]+",{[a:S6G8][b:V][c:e][d:fz][e:pEWZ+lN][f:QJ][g:R][h:)M][i:PU9k][j:][k:/][l:B#%][m:q][n:D(^O][o:!TdX][p:=][q:][r:rt\][s:@F7K][t:5HIL][u:Y][v:c][w:A][x:j][y:_][z:]}
-// Mon Feb 17 09:06:59 CET 2020 Climber 1 Iterations: (1,5158) Score: -2,979068968024821E1 RANDOM,"[a-z]+",{[a:(+][b:@][c:^][d:c][e:BTEVW9jk<lM][f:1][g:;/][h:3tf][i:pH|][j:][k:][l:&)L][m:G][n:R7*K][o:268X:-][p:>][q:][r:C4DU_][s:Pb#SdFYZ][t:5yJz.NO][u:%][v:][w:A][x:][y:q][z:]} ienpieceseiflemostiaeasturestennhletodearsmeallstitsiinceonehitaannoreeathesitssalregioncsetonsresporastanyugordomettliamothestartstableseeasasnosedtwornotereactatinesetorangtheirseiseentoedentinteretalestoestsatitsedagonemstchtorstderhaateofnorereperstoaidthtenatictheymondealforeaseeeillaalertedstsiegaliiseseenherstenordperitieststowinga
 		String aPatternString = "(" + Init.COPIED + "|" + Init.RANDOM + ")," + "(\\{.*\\})";
 
 		Pattern aPattern = Pattern.compile(aPatternString);
@@ -44,14 +42,13 @@ public class Cryptor {
 			System.out.println("Parsing cryptor from " + aCryptor);
 			Pattern aCryptorPattern = Pattern.compile("(\\[?(\\w):(\\S*?)\\][\\[\\}])");
 			Matcher aCryptorMatcher = aCryptorPattern.matcher(aCryptor);
-			
+
 			Integer aInt = 0;
 			while (aCryptorMatcher.find()) {
 				this._letters.add(aCryptorMatcher.group(2).charAt(0));
 
-				for (Character aChar : aCryptorMatcher.group(3).toCharArray()) {
+				for (Character aChar : aCryptorMatcher.group(3).toCharArray())
 					this._symbols.put(aChar, aInt);
-				}
 				aInt++;
 			}
 		} else
@@ -61,23 +58,16 @@ public class Cryptor {
 	public Cryptor(final Init iRandom, final Set<Character> iSymbols, Set<String> iAlphabet) {
 		_random = iRandom;
 
-		Vector<String> aVector = new Vector<String>();
+		for (String aString:iAlphabet)
+			_letters.add(aString.charAt(0));
 
-		aVector.addAll(iAlphabet);
-
-		while (aVector.size() > 0)
-			_letters.add(aVector.remove(0).charAt(0));
-
-		{
-			int aPos = 0;
-			
-			for (Character aChar : iSymbols) {
-				if (_random == Init.RANDOM)
-					_symbols.put(aChar, GlobalStore._random.nextInt(_letters.size()));
-				else {
-					_symbols.put(aChar, aPos % _letters.size());
-					aPos++;
-				}
+		int aPos = 0;
+		for (Character aChar:iSymbols) {
+			if (_random == Init.RANDOM)
+				_symbols.put(aChar, GlobalStore._random.nextInt(_letters.size()));
+			else {
+				_symbols.put(aChar, aPos % _letters.size());
+				aPos++;
 			}
 		}
 	}
@@ -97,8 +87,7 @@ public class Cryptor {
 		aSymbolVector.addAll(_symbols.keySet());
 
 		for (int aInt = 0; aInt < aSymbolVector.size()*iFraction; aInt++) {
-			Character aSymbol = aSymbolVector
-					.elementAt(GlobalStore._random.nextInt(aSymbolVector.size()));
+			Character aSymbol = aSymbolVector.elementAt(GlobalStore._random.nextInt(aSymbolVector.size()));
 			Integer aTo = GlobalStore._random.nextInt(_letters.size());
 			moveSymbol(aSymbol, aTo);
 		}
@@ -159,7 +148,7 @@ public class Cryptor {
 		}
 		return null;
 	}
-	
+
 	public void swapChar(Integer iFrom, Integer iTo) {
 		Character aChar=_letters.elementAt(iTo);
 		_letters.set(iTo, _letters.elementAt(iFrom));
