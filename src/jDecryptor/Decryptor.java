@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 29.9.2020 15:53");
+			System.out.println("Version 1.10.2020 17:24");
 
 			Options aOptions = new Options();
 			{

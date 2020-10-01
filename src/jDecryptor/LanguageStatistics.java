@@ -14,7 +14,6 @@ import java.util.concurrent.Callable;
 
 public class LanguageStatistics implements Callable<LanguageStatistics> {
 
-	// Language Statistic global
 	private final Integer _length;
 	private Long _samples=0L;
 	private final Map<Integer,Double> _scoreMeans=new HashMap<Integer,Double>();
@@ -22,11 +21,11 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 	private String _hugeText=null;
 	private Integer _cipherLength=0;
 
-	final private Map<String, Long> _sequenceStats = new HashMap<String,Long>();
+	private final Map<String, Long> _sequenceStats = new HashMap<String,Long>();
 
 	@Override // builds language statistics score statistics from corpus
 	public LanguageStatistics call() throws Exception {
-		Vector<Double> aValues = new Vector<Double>();
+		final Vector<Double> aValues = new Vector<Double>();
 		
 		for (int aIndex = 0; aIndex <= _hugeText.length() - _cipherLength; aIndex+=_cipherLength)
 			aValues.add(rate(_hugeText.substring(aIndex, aIndex + _cipherLength)));
@@ -82,6 +81,7 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 			else
 				_sequenceStats.put(aString, aCount+1L);
 			_samples++;
+
 			if (_samples<0)
 				throw new Error("Long overrun");
 		}
@@ -122,21 +122,12 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 		LanguageStatistics aObservedStatistics = new LanguageStatistics(this.getLength());
 		aObservedStatistics.addStringAsSequences(iClear);
 
-		//				Integer aN=iClear.length()-aLength+1;
 		for (String aString:aObservedStatistics.getSequences()) {
 			Double aP=this.empiricalMean(aString);
 			if (aP==0.0)
 				aP=aNeverSeen;
 			Long aK=aObservedStatistics.getCount(aString);
 
-			//					Gauss
-			//					aLengthScore += aK*(2*aN*aP-aK)/(aN*aP*(1-aP)); // Only good for npq>9
-
-			//					Binomial
-			//					org.apache.commons.math3.distribution.BinomialDistribution aBinDist = new org.apache.commons.math3.distribution.BinomialDistribution(aN,aP);
-			//					aLengthScore += aBinDist.logProbability(aK)-aBinDist.logProbability(0);
-
-			//					Poisson
 			aScore -= org.apache.commons.math3.util.CombinatoricsUtils.factorialLog(aK.intValue()) - aK*aLog.value(aP);
 		}					
 

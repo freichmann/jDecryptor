@@ -26,10 +26,9 @@ public class Score implements Comparable<Score> {
 		Double aScore = 0.0;
 
 		for (LanguageStatistics aNorm : iNorms) {
-			// log(Poisson) score is actually not really normal distributed
-			org.apache.commons.math3.distribution.NormalDistribution aNormalDist = new org.apache.commons.math3.distribution.NormalDistribution(aNorm.getScoreMean(iClear.length()),aNorm.getScoreSigma(iClear.length()));
 			Double aLengthScore = aNorm.rate(iClear);
 
+			org.apache.commons.math3.distribution.NormalDistribution aNormalDist = new org.apache.commons.math3.distribution.NormalDistribution(aNorm.getScoreMean(iClear.length()),aNorm.getScoreSigma(iClear.length()));
 			Double aLnScore=aNormalDist.logDensity(aLengthScore);
 			aScore += aLnScore;
 			

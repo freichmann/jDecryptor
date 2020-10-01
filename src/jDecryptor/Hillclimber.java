@@ -49,9 +49,9 @@ public class Hillclimber implements Callable<LoopCounter> {
 
 	private void optimize(final Cryptor iCryptor, final Cipher iCipher) throws Exception {
 		Cryptor aCurrentCryptor = new Cryptor(iCryptor);
-		Score aBestScore=null;
-		Score aPreviousScore=null;
+		Score aBestScore=new Score(_letterSequences, aCurrentCryptor.decipher(iCipher));
 		Move aBestMove=null;
+		Score aPreviousScore;
 
 		do {
 			aPreviousScore=aBestScore;
@@ -77,14 +77,14 @@ public class Hillclimber implements Callable<LoopCounter> {
 					}
 				}
 
-			if (aPreviousScore==null || (aBestScore!=null && aBestScore.compareTo(aPreviousScore)>0)) {
+			if (aBestScore!=null && aBestScore.compareTo(aPreviousScore)>0) {
 				aBestMove.apply();
 				if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aBestScore, _name, _loops))
 					System.out.println(printBest(aCurrentCryptor, aBestScore) + " " + aCurrentCryptor.decipher(iCipher));
 			}
 
 			_loops._optimizeLoops++;
-		} while ( aPreviousScore==null || aBestScore.compareTo(aPreviousScore)>0 );
+		} while ( aBestScore.compareTo(aPreviousScore)>0 );
 	}
 
 	private String printBest(final Cryptor iCryptor, final Score iScore) {
@@ -97,8 +97,7 @@ public class Hillclimber implements Callable<LoopCounter> {
 	private Cryptor initialize(final Double iFraction, final Cipher iCipher) {
 		final Cryptor aCryptor;
 
-		if (GlobalStore.getInstance().getBest().getScore() == null
-				|| GlobalStore._random.nextDouble() <iFraction ) {
+		if (GlobalStore.getInstance().getBest().getScore() == null) {
 			aCryptor = new Cryptor(Init.RANDOM, iCipher.getSymbols(), _alphabet);
 		} else {
 			aCryptor = new Cryptor(GlobalStore.getInstance().getBest().getCryptor());
