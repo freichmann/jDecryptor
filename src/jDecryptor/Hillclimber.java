@@ -50,11 +50,11 @@ public class Hillclimber implements Callable<LoopCounter> {
 	private void optimize(final Cryptor iCryptor, final Cipher iCipher) throws Exception {
 		Cryptor aCurrentCryptor = new Cryptor(iCryptor);
 		Score aBestScore=new Score(_letterSequences, aCurrentCryptor.decipher(iCipher));
-		Move aBestMove=null;
 		Score aPreviousScore;
 
 		do {
 			aPreviousScore=aBestScore;
+			Move aBestMove=null;
 			aBestScore=null;
 
 			for (Character aSymbol : iCipher.getSymbols())
