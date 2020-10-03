@@ -35,9 +35,9 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 			aMean+=aValue;
 		aMean/=aValues.size();
 
-		Double aVariance=0.0;
 		org.apache.commons.math3.analysis.function.Pow aPow=new org.apache.commons.math3.analysis.function.Pow();
 		org.apache.commons.math3.analysis.function.Sqrt aSqrt=new org.apache.commons.math3.analysis.function.Sqrt();
+		Double aVariance=0.0;
 		for (Double aValue:aValues)
 			aVariance+=aPow.value(aValue-aMean,2.0);
 		Double aSigma = aSqrt.value(aVariance/(aValues.size()-1));
@@ -128,7 +128,7 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 				aP=aNeverSeen;
 			Long aK=aObservedStatistics.getCount(aString);
 
-			aScore -= org.apache.commons.math3.util.CombinatoricsUtils.factorialLog(aK.intValue()) - aK*aLog.value(aP);
+			aScore-=org.apache.commons.math3.util.CombinatoricsUtils.factorialLog(aK.intValue())-aK*aLog.value(aP);
 		}					
 
 		return aScore;
