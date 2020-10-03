@@ -40,8 +40,8 @@ public class Hillclimber implements Callable<LoopCounter> {
 			_loops._resets++;
 			_loops._optimizeLoops=0;
 			Cryptor aSeed = initialize(_randomizeFraction, _cipher);
-			if (GlobalStore.getInstance().getVerbose())
-				System.out.println((new Date()).toString() + " " + _name + " Reset with " + aSeed);
+//			if (GlobalStore.getInstance().getVerbose())
+//				System.out.println((new Date()).toString() + " " + _name + " Reset with " + aSeed);
 			optimize(aSeed, _cipher);
 		}
 		return _loops;
