@@ -247,7 +247,7 @@ public class Decryptor {
 					org.apache.commons.math3.analysis.function.Log aLn = new org.apache.commons.math3.analysis.function.Log();
 					for (Future<LanguageStatistics> aLangStatFuture:aLangStatFutures) {
 						System.out.println("Score statistics result for " + aLangStatFuture.get().getLength()
-								+ " Mean: " + aFormat.format(aLangStatFuture.get().getScoreMean(aCipher.length()))
+								+ " Mean:" + aFormat.format(aLangStatFuture.get().getScoreMean(aCipher.length()))
 								+ " Sigma:" + aFormat.format(aLangStatFuture.get().getScoreSigma(aCipher.length())));
 						aLnPerfectSum-=aLn.value(Math.sqrt(2*Math.PI)*aLangStatFuture.get().getScoreSigma(aCipher.length()));
 					}
