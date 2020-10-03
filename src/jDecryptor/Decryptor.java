@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 1.10.2020 17:24");
+			System.out.println("Version 3.10.2020 19:38");
 
 			Options aOptions = new Options();
 			{
@@ -235,8 +235,6 @@ public class Decryptor {
 					System.out.println("Read " + aHugeText.length() + " of text sample.");
 					DecimalFormat aFormat = new DecimalFormat("0.00E0");
 					for (LanguageStatistics aLangStat : aLetters) {
-						System.out.println("Submitting score statistic calculation for "
-								+ aLangStat.getLength() + "-grams");
 						aLangStat.setTextCipherLength(aHugeText.toString(), aCipher.length());
 
 						Future<LanguageStatistics> aFuture = aExecService.submit(aLangStat);
@@ -245,13 +243,16 @@ public class Decryptor {
 
 					Double aLnPerfectSum=0.0;
 					org.apache.commons.math3.analysis.function.Log aLn = new org.apache.commons.math3.analysis.function.Log();
+					System.out.println("Poisson likelihood statistics from sample text");
 					for (Future<LanguageStatistics> aLangStatFuture:aLangStatFutures) {
-						System.out.println("Score statistics result for " + aLangStatFuture.get().getLength()
-								+ " Mean:" + aFormat.format(aLangStatFuture.get().getScoreMean(aCipher.length()))
-								+ " Sigma:" + aFormat.format(aLangStatFuture.get().getScoreSigma(aCipher.length())));
-						aLnPerfectSum-=aLn.value(Math.sqrt(2*Math.PI)*aLangStatFuture.get().getScoreSigma(aCipher.length()));
+						Double aLnPerfect=-aLn.value(Math.sqrt(2*Math.PI)*aLangStatFuture.get().getScoreSigma(aCipher.length()));
+						System.out.println(aLangStatFuture.get().getLength()+"-grams"
+								+ " Mean:"+aFormat.format(aLangStatFuture.get().getScoreMean(aCipher.length()))
+								+ " Sigma:"+aFormat.format(aLangStatFuture.get().getScoreSigma(aCipher.length()))
+								+ " Perfect:"+aFormat.format(aLnPerfect));
+						aLnPerfectSum+=aLnPerfect;
 					}
-					System.out.println("Maximum reachable score: " + aFormat.format( aLnPerfectSum ));
+					System.out.println("Perfect score: " + aFormat.format( aLnPerfectSum ));
 				} else {
 					System.err.println("No text sample to build statistics from. Stopping.");
 					System.exit(1);
