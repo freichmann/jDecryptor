@@ -233,7 +233,7 @@ public class Decryptor {
 
 				if (aHugeText.length() > 0) {
 					System.out.println("Read " + aHugeText.length() + " of text sample.");
-					DecimalFormat aFormat = new DecimalFormat("0.0000E0");
+					DecimalFormat aFormat = new DecimalFormat("0.000000E0");
 					for (LanguageStatistics aLangStat : aLetters) {
 						aLangStat.setTextCipherLength(aHugeText.toString(), aCipher.length());
 

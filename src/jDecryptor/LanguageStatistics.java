@@ -18,7 +18,7 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 	private Long _samples=0L;
 	private final Map<Integer,Double> _scoreMeans=new HashMap<Integer,Double>();
 	private final Map<Integer,Double> _scoreSigmas=new HashMap<Integer,Double>();
-	private String _hugeText=null;
+	private String _sampleText=null;
 	private Integer _cipherLength=0;
 
 	private final Map<String, Long> _sequenceStats = new HashMap<String,Long>();
@@ -27,8 +27,8 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 	public LanguageStatistics call() throws Exception {
 		final Vector<Double> aValues = new Vector<Double>();
 		
-		for (int aIndex = 0; aIndex <= _hugeText.length() - _cipherLength; aIndex+=_cipherLength)
-			aValues.add(rate(_hugeText.substring(aIndex, aIndex + _cipherLength)));
+		for (int aIndex = 0; aIndex <= _sampleText.length() - _cipherLength; aIndex++)
+			aValues.add(rate(_sampleText.substring(aIndex, aIndex + _cipherLength)));
 
 		Double aMean=0.0;
 		for (Double aValue:aValues)
@@ -40,7 +40,7 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 		Double aVariance=0.0;
 		for (Double aValue:aValues)
 			aVariance+=aPow.value(aValue-aMean,2.0);
-		Double aSigma = aSqrt.value(aVariance/(aValues.size()-1));
+		Double aSigma=aSqrt.value(aVariance/(aValues.size()-1));
 
 		this._scoreMeans.put(_cipherLength, aMean);
 		this._scoreSigmas.put(_cipherLength, aSigma);
@@ -110,7 +110,7 @@ public class LanguageStatistics implements Callable<LanguageStatistics> {
 	}
 
 	public void setTextCipherLength(String iHugeText, Integer iCipherLength) {
-		_hugeText=iHugeText;
+		_sampleText=iHugeText;
 		_cipherLength=iCipherLength;		
 	}
 
