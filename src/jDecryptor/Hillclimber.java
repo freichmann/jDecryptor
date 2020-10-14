@@ -83,10 +83,13 @@ public class Hillclimber implements Callable<LoopCounter> {
 					Move aCurrentMove=new SymbolMove(aCurrentCryptor, aSymbol, aTo);
 					Score aCurrentScore=aCurrentMove.checkMove(_cipher, _letterSequences);
 					final Double aTolerance=aCurrentTolerance*GlobalStore._random.nextDouble();
-					
+
 					if (aCurrentScore!=null && (aCurrentScore.rate()*(1.0-aTolerance)>aLastScore.rate())) {
+						if (aCurrentScore.compareTo(aLastScore)<0)
+							aTolerated++;
 						aLastScore=aCurrentScore;
 						aBestChoiceSoFar=aCurrentMove;
+
 						if (aCurrentScore.compareTo(aLoopBestScore)>0) {
 							aLoopBestScore=aCurrentScore;
 							aLoopImproved=true;
@@ -97,8 +100,7 @@ public class Hillclimber implements Callable<LoopCounter> {
 								if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aLoopBestScore, _name, _loops))
 									System.out.println(printGlobalBest(aCurrentCryptor, aLoopBestScore, aCurrentTolerance) + " " + aCurrentCryptor.decipher(iCipher));
 							}
-						} else
-							aTolerated++;
+						}
 					}
 				}
 

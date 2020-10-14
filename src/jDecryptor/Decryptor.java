@@ -143,7 +143,7 @@ public class Decryptor {
 			final Integer aMaximumLoops = Integer.valueOf(aCommandLine.getOptionValue("iterations", "0"));
 			final ReadMode aReadMode = ReadMode.valueOf(aCommandLine.getOptionValue("mode"));
 			final Double aRandomFraction = Double.valueOf(aCommandLine.getOptionValue("scramble", "1.0"));
-			final Double aFuzzy = Double.valueOf(aCommandLine.getOptionValue("fuzzy", "1.1"));
+			final Double aFuzzy = Double.valueOf(aCommandLine.getOptionValue("fuzzy", "0.05"));
 			final String aSeed = aCommandLine.getOptionValue("seed", null);
 			final boolean aVerbose = aCommandLine.hasOption("verbose");
 			final Set<String> aAlphabet = new TreeSet<String>();
