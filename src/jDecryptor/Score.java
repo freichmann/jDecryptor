@@ -53,9 +53,9 @@ public class Score implements Comparable<Score> {
 	@Override
 	public String toString() {
 		StringBuffer aStrBuf = new StringBuffer();
-		DecimalFormat aFormat = new DecimalFormat("0.000000000000000E0");
+		DecimalFormat aFormat = new DecimalFormat("0.0000");
 
-		aStrBuf.append("Score: " + (this.rate().isNaN() ? "NaN" : aFormat.format(this.rate())));
+		aStrBuf.append("Score:" + (this.rate().isNaN() ? "NaN" : aFormat.format(this.rate())));
 
 		if (GlobalStore.getInstance().getVerbose())
 			aStrBuf.append(" " + dumpLog());

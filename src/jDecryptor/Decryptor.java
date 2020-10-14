@@ -42,7 +42,7 @@ enum ReadMode {
 public class Decryptor {
 	public static void main(String[] iArgs) {
 		try {
-			System.out.println("Version 3.10.2020 19:38");
+			System.out.println("jDecryptor Version 14.10.2020 17:05");
 
 			Options aOptions = new Options();
 			{
@@ -64,8 +64,8 @@ public class Decryptor {
 			}
 
 			{
-				Option aOpt = new Option("i", "iterations", true, "maximum resets per thread");
-				aOpt.setRequired(false);
+				Option aOpt = new Option("f", "fuzzy", true, "ratio to accept noise");
+				aOpt.setRequired(true);
 				aOptions.addOption(aOpt);
 			}
 
@@ -104,7 +104,13 @@ public class Decryptor {
 				aOpt.setRequired(true);
 				aOptions.addOption(aOpt);
 			}
-			
+
+			{
+				Option aOpt = new Option("x", "iterations", true, "maximum iterations before deep reset");
+				aOpt.setRequired(false);
+				aOptions.addOption(aOpt);
+			}
+
 			CommandLineParser aCommandParser = new DefaultParser();
 			HelpFormatter aFormatter = new HelpFormatter();
 			CommandLine aCommandLine;
@@ -137,13 +143,14 @@ public class Decryptor {
 			final Integer aMaximumLoops = Integer.valueOf(aCommandLine.getOptionValue("iterations", "0"));
 			final ReadMode aReadMode = ReadMode.valueOf(aCommandLine.getOptionValue("mode"));
 			final Double aRandomFraction = Double.valueOf(aCommandLine.getOptionValue("scramble", "1.0"));
+			final Double aFuzzy = Double.valueOf(aCommandLine.getOptionValue("fuzzy", "1.1"));
 			final String aSeed = aCommandLine.getOptionValue("seed", null);
 			final boolean aVerbose = aCommandLine.hasOption("verbose");
 			final Set<String> aAlphabet = new TreeSet<String>();
 			GlobalStore.getInstance().setVerbose(aVerbose);
 
 			System.out.println("Parallel threads: " + aMaxThreads);
-			System.out.println("Maximum iterations per thread: " + (aMaximumLoops == 0 ? "unlimited" : aMaximumLoops));
+			System.out.println("Maximum iterations before deep reset: " + (aMaximumLoops == 0 ? "unlimited" : aMaximumLoops));
 
 			final Set<LanguageStatistics> aLetters = new HashSet<LanguageStatistics>();
 
@@ -283,6 +290,7 @@ public class Decryptor {
 
 			System.out.println("Cipher symbols : " + aCipher.getSymbols());
 			System.out.println("Random fraction: " + aRandomFraction);
+			System.out.println("Tolerate worse score: " + aFuzzy);
 			System.out.println("Language alphabet: " + aAlphabet);
 			System.out.println("Language alphabet Size: " + aAlphabet.size());
 
@@ -296,7 +304,7 @@ public class Decryptor {
 
 			for (Integer aInt = 0; aInt < aMaxThreads; aInt++) {
 				Future<LoopCounter> aFuture = aExecService.submit(
-						new Hillclimber("Thread " + aInt, aCipher, aMaximumLoops, aLetters, aAlphabet, aRandomFraction));
+						new Hillclimber("Thread " + aInt, aCipher, aMaximumLoops, aLetters, aAlphabet, aRandomFraction, aFuzzy));
 				aLoopCountFutures.add(aFuture);
 			}
 

@@ -6,11 +6,11 @@
 
 package jDecryptor;
 
+import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import jDecryptor.Move.CharMove;
 import jDecryptor.Move.Move;
 import jDecryptor.Move.SymbolMove;
 
@@ -23,73 +23,110 @@ public class Hillclimber implements Callable<LoopCounter> {
 	private final Integer _maximumLoops;
 	private final LoopCounter _loops = new LoopCounter();
 	private final Set<String> _alphabet;
+	private final Double _fuzzy;
+	private Cryptor _climberBestCryptor=null;
+	private Score _climberBestScore=null;
 
-	public Hillclimber(final String iName, final Cipher iCipher, final Integer iMaximumLoops,
-			final Set<LanguageStatistics> iLetterSequences, final Set<String> iAlphabet, final Double iRandomizeFraction) throws Exception {
+	public Hillclimber(final String iName, final Cipher iCipher, final Integer iMaximumLoops, final Set<LanguageStatistics> iLetterSequences, final Set<String> iAlphabet, final Double iRandomizeFraction, final Double iFuzzy) throws Exception {
 		_letterSequences = iLetterSequences;
 		_name = iName;
 		_randomizeFraction = iRandomizeFraction;
 		_cipher = iCipher;
 		_maximumLoops = iMaximumLoops;
 		_alphabet = iAlphabet;
+		_fuzzy = iFuzzy;
 	}
 
 	@Override
 	public LoopCounter call() throws Exception {
-		while (_maximumLoops==0 || _maximumLoops>_loops._resets) {
-			_loops._resets++;
-			_loops._optimizeLoops=0;
-			Cryptor aSeed = initialize(_randomizeFraction, _cipher);
-//			if (GlobalStore.getInstance().getVerbose())
-//				System.out.println((new Date()).toString() + " " + _name + " Reset with " + aSeed);
-			optimize(aSeed, _cipher);
+		while (true) {
+			long aFail=0;
+			do {
+				_loops._resets++;
+				_loops._optimizeLoops=0;
+				Cryptor aSeed=initialize(_randomizeFraction, _cipher);
+				if (!optimize(aSeed, _cipher))
+					aFail++;
+				else
+					aFail=0;
+			} while (_maximumLoops>aFail);
+
+			_climberBestCryptor=null;
+			_climberBestScore=null;
 		}
-		return _loops;
 	}
 
-	private void optimize(final Cryptor iCryptor, final Cipher iCipher) throws Exception {
+	private boolean optimize(final Cryptor iCryptor, final Cipher iCipher) throws Exception {
+		boolean aEverFoundImprovement=false;
 		Cryptor aCurrentCryptor = new Cryptor(iCryptor);
-		Score aBestScore=new Score(_letterSequences, aCurrentCryptor.decipher(iCipher));
-		Score aPreviousScore;
+		Score aLoopBestScore=new Score(_letterSequences, aCurrentCryptor.decipher(iCipher));
+		Double aCurrentTolerance=0.02;
+
+		if (_climberBestScore==null || aLoopBestScore.compareTo(_climberBestScore)>0) {
+			_climberBestScore=aLoopBestScore;
+
+			if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aLoopBestScore, _name, _loops))
+				System.out.println(printGlobalBest(aCurrentCryptor, aLoopBestScore, aCurrentTolerance) + " " + aCurrentCryptor.decipher(iCipher));
+		}
+
+		Score aLastScore;
+		boolean aLoopImproved;
 
 		do {
-			aPreviousScore=aBestScore;
-			Move aBestMove=null;
-			aBestScore=null;
+			aLastScore=aLoopBestScore;
+			Move aBestChoiceSoFar=null;
+			long aTolerated=0;
+			aLoopImproved=false;
 
-			for (Character aSymbol : iCipher.getSymbols())
-				for (Integer aTo = 0; aTo < aCurrentCryptor.getAlphabetSize(); aTo++) {
+			for (Character aSymbol : iCipher.getSymbols()) {
+				for (Integer aTo = 0; aTo<aCurrentCryptor.getAlphabetSize(); aTo++) {
 					Move aCurrentMove=new SymbolMove(aCurrentCryptor, aSymbol, aTo);
-					Score aScore=aCurrentMove.checkMove(_cipher, _letterSequences);
-					if (aScore!=null && (aBestScore==null || aScore.compareTo(aBestScore)>0)) {
-						aBestScore=aScore;
-						aBestMove=aCurrentMove;
+					Score aCurrentScore=aCurrentMove.checkMove(_cipher, _letterSequences);
+					final Double aTolerance=aCurrentTolerance*GlobalStore._random.nextDouble();
+					
+					if (aCurrentScore!=null && (aCurrentScore.rate()*(1.0-aTolerance)>aLastScore.rate())) {
+						aLastScore=aCurrentScore;
+						aBestChoiceSoFar=aCurrentMove;
+						if (aCurrentScore.compareTo(aLoopBestScore)>0) {
+							aLoopBestScore=aCurrentScore;
+							aLoopImproved=true;
+							if (aCurrentScore.compareTo(_climberBestScore)>0) {
+								aEverFoundImprovement=true;
+								_climberBestScore=aCurrentScore;
+								_climberBestCryptor=new Cryptor(aCurrentCryptor);
+								if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aLoopBestScore, _name, _loops))
+									System.out.println(printGlobalBest(aCurrentCryptor, aLoopBestScore, aCurrentTolerance) + " " + aCurrentCryptor.decipher(iCipher));
+							}
+						} else
+							aTolerated++;
 					}
 				}
 
-			for (Integer aFrom=0; aFrom < aCurrentCryptor.getAlphabetSize(); aFrom++)
-				for (Integer aTo=aFrom+1; aTo < aCurrentCryptor.getAlphabetSize(); aTo++) {
-					Move aCurrentMove=new CharMove(aCurrentCryptor, aFrom, aTo);
-					Score aScore=aCurrentMove.checkMove(_cipher, _letterSequences);
-					if (aScore!=null && (aBestScore==null || aScore.compareTo(aBestScore)>0)) {
-						aBestScore=aScore;
-						aBestMove=aCurrentMove;
-					}
-				}
+				if (aBestChoiceSoFar!=null)
+					aBestChoiceSoFar.apply();
+			}
 
-			if (aBestScore!=null && aBestScore.compareTo(aPreviousScore)>0) {
-				aBestMove.apply();
-				if (GlobalStore.getInstance().checkBest(aCurrentCryptor, aBestScore, _name, _loops))
-					System.out.println(printBest(aCurrentCryptor, aBestScore) + " " + aCurrentCryptor.decipher(iCipher));
+			if (new Double(aTolerated)>_fuzzy*new Double(_cipher.length()))
+				aCurrentTolerance*=0.95;
+			else {
+				aCurrentTolerance*=1.05;
+				if (aCurrentTolerance>1.0)
+					aCurrentTolerance=1.0;
 			}
 
 			_loops._optimizeLoops++;
-		} while ( aBestScore.compareTo(aPreviousScore)>0 );
+		} while ( aLoopImproved );
+
+		return aEverFoundImprovement;
 	}
 
-	private String printBest(final Cryptor iCryptor, final Score iScore) {
+	private String printGlobalBest(final Cryptor iCryptor, final Score iScore, final Double iTolerance) {
+		DecimalFormat aFormat = new DecimalFormat("0.0000");
 		final StringBuffer aStrBuf = new StringBuffer();
-		aStrBuf.append((new Date()).toString() + " " + _name + " Iteration: " + this._loops + " " + iScore + " " + iCryptor.toString());
+		aStrBuf.append((new Date()).toString() + " " + _name + " Iteration: " + this._loops
+				+ " " + iScore.toString()
+				+ " Tolerance:" + aFormat.format(iTolerance)
+				+ " Cryptor:" + iCryptor.toString());
 
 		return aStrBuf.toString();
 	}
@@ -97,10 +134,10 @@ public class Hillclimber implements Callable<LoopCounter> {
 	private Cryptor initialize(final Double iFraction, final Cipher iCipher) {
 		final Cryptor aCryptor;
 
-		if (GlobalStore.getInstance().getBest().getScore() == null) {
+		if (_climberBestCryptor == null) {
 			aCryptor = new Cryptor(Init.RANDOM, iCipher.getSymbols(), _alphabet);
 		} else {
-			aCryptor = new Cryptor(GlobalStore.getInstance().getBest().getCryptor());
+			aCryptor = new Cryptor(_climberBestCryptor);
 			aCryptor.setInitMode(Init.COPIED);
 			aCryptor.randomize(iFraction);
 		}
